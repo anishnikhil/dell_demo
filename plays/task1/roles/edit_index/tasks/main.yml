@@ -1,0 +1,6 @@
+---
+- name: Copy index.html to /var/www/html
+  template: 
+    src: templates/index.html.j2
+    dest: /var/www/html/index.html
+  notify: restart_httpd

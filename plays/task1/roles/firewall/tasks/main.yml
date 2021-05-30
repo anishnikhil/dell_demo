@@ -1,0 +1,32 @@
+---
+- name: Install firewalld package
+  yum:
+    name: firewalld
+    state: latest
+
+- name: Enable firewalld service
+  service:
+    name: firewalld
+    state: started
+    enabled: yes
+
+- name: Allow incoming traffic on port 80 and 443
+  firewalld:
+    port: "{{item}}"
+    state: enabled
+    permanent: yes
+    immediate: yes
+  with_items:
+    - 443/tcp
+    - 80/tcp
+
+- name: Enable http and https services
+  firewalld:
+    zone: public
+    service: "{{item}}"
+    permanent: yes
+    immediate: yes
+    state: enabled
+  with_items:
+    - http
+    - https

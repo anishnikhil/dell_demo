@@ -1,0 +1,56 @@
+---
+- name: Get the size of /tmp directory
+  shell: du -sk /tmp
+  become: true
+  register: tmp_size
+
+- set_fact:
+    file_size_before_delete: "{{tmp_size.stdout.split()[0]|int}}"
+
+- debug:
+    msg: "Current space utilized by /tmp is {{file_size_before_delete}}K"
+
+- name: Find files which are older than 3 days
+  find:
+    paths: /tmp
+    age: 3d
+    recurse: yes
+    file_type: any
+  register: all_files
+
+- debug: var=item.path
+  with_items: "{{ all_files.files }}"
+
+- name: Files which are locked and present in /tmp
+  shell:  lslocks -o PATH | grep /tmp 
+  register: locked_files
+  failed_when: locked_files.rc >= 2
+  changed_when: locked_files.rc == 0
+- debug: var=locked_files.stdout_lines
+
+- name: List files to be deleted
+  shell: echo "{{item.path}}"
+  with_items: "{{ all_files.files }}"
+  when: item.path not in locked_files.stdout_lines
+
+- name: Delete all files and folders under /tmp except locked files
+  file:
+    path: "{{item.path}}"
+    state: absent
+  #  recurse: true
+  with_items: "{{ all_files.files }}"
+  when: item.path not in locked_files.stdout_lines
+
+- name: Get the size of /tmp directory after deletion of files
+  shell: du -sk /tmp
+  become: true
+  register: tmp_size1
+
+- set_fact:
+    file_size_after_delete: "{{tmp_size1.stdout.split()[0]|int}}"
+
+- set_fact:
+   space_free: "{{file_size_after_delete|int - file_size_before_delete|int}}"
+
+- debug:
+    msg: "Current space utilized by /tmp is {{file_size_before_delete}}K. Freed Space= {{space_free}}"

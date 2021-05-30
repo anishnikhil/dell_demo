@@ -1,0 +1,36 @@
+---
+- name: include vars
+  include_vars:
+    file: users.yml
+
+- name: Create users in webserver hosts
+  user:
+    name: "{{item.username}}"
+    uid: "{{item.uid}}"
+    group: wheel
+    shell: /bin/bash
+    comment: webserver_user
+    state: present
+    password: "{{ user_password | password_hash('sha512')}}"
+    update_password: on_create
+#  no_log: true
+  with_items: "{{ users }}"
+  when:
+    - ansible_host in groups['webservers']
+    - "item.uid|string|first == '1'"
+  
+- name: Create users in database server 
+  user:
+    name: "{{item.username}}"
+    uid: "{{item.uid}}"
+    group: wheel
+    shell: /bin/bash
+    comment: database_user
+    state: present
+    password: "{{ user_password | password_hash('sha512')}}"
+    update_password: on_create
+#  no_log: true
+  with_items: "{{ users }}"
+  when:
+    - ansible_host in groups['database']
+    - "item.uid|string|first == '2'"

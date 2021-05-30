@@ -1,0 +1,11 @@
+[webservers]
+172.31.3.216
+
+[webservers:vars]
+ansible_user=cloud_user
+
+[database]
+172.31.9.15
+
+[database:vars]
+ansible_user=cloud_user

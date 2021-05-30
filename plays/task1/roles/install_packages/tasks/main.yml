@@ -1,0 +1,15 @@
+---
+- name: Install Softwares
+  yum:
+    name: "{{item}}"
+    state: latest
+  with_items:
+    - httpd
+    - php
+    - mod_ssl
+
+- name: Enable Apache
+  service:
+    name: httpd
+    state: started
+    enabled: yes
